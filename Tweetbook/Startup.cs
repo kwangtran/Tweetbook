@@ -52,7 +52,7 @@ namespace Tweetbook
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             //app.UseCookiePolicy();
-            //app.UseAuthentication();
+            app.UseAuthentication();
 
             var swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);

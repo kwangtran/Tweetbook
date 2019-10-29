@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +9,12 @@ using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Reponses;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Domain;
+using Tweetbook.Extensions;
 using Tweetbook.Services;
 
 namespace Tweetbook.Controllers.V1
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PostsController : Controller
     {
         private readonly IPostService _postService;
@@ -37,11 +41,14 @@ namespace Tweetbook.Controllers.V1
         [HttpPut(ApiRoutes.Posts.Update)]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid postId, [FromBody] UpdatePostRequest request)
         {
-            var post = new Post
+            var userOwnPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+            if (!userOwnPost)
             {
-                Id = postId,
-                Name = request.Name
-            };
+                return BadRequest(new { error = "you dont own this post" });
+            }
+
+            var post = await _postService.GetPostByIdAsync(postId);
+            post.Name = request.Name;
             var updated = await _postService.UpdatePostAsync(post);
             if (updated)
             {
@@ -53,6 +60,12 @@ namespace Tweetbook.Controllers.V1
         [HttpDelete(ApiRoutes.Posts.Delete)]
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid postId)
         {
+            var userOwnPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+            if (!userOwnPost)
+            {
+                return BadRequest(new { error = "you dont own this post" });
+            }
+
             var deleted = await _postService.DeletePostAsync(postId);
             if (deleted)
             {
@@ -65,7 +78,12 @@ namespace Tweetbook.Controllers.V1
         [HttpPost(ApiRoutes.Posts.Create)]
         public async Task<IActionResult> CreateAsync([FromBody] CreatePostRequest postRequest)
         {
-            var post = new Post { Name = postRequest.Name };
+            var post = new Post
+            {
+
+                Name = postRequest.Name,
+                UserId = HttpContext.GetUserId()
+            };
             if (post.Id != Guid.Empty)
             {
                 post.Id = Guid.NewGuid();
