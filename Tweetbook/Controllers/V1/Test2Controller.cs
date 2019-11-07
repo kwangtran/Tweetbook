@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace Tweetbook.Controllers.V1
 {
-    public class TestController
+    public class Test2Controller
     {
-        //commit lan 2
+        //Ignore controller nay
     }
 }
