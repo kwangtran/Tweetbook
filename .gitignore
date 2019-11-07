@@ -3,7 +3,7 @@
 
 # Azure Functions localsettings file
 local.settings.json
-
+Tweetbook/Controllers/V1/Test2Controller.cs
 # User-specific files
 *.suo
 *.user
